@@ -37,13 +37,15 @@ TMP_DIR      = Path(tempfile.gettempdir())
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-assert FINETUNE_DIR.exists(), (
-    f"Fine-tuned model not found at {FINETUNE_DIR}. "
-    "Run 06a first to generate it."
-)
+if FINETUNE_DIR.exists() and any(FINETUNE_DIR.iterdir()):
+    RECOGNITION_CHECKPOINT = str(FINETUNE_DIR)
+    print(f"Fine-tuned model found : {FINETUNE_DIR}")
+else:
+    RECOGNITION_CHECKPOINT = None
+    print(f"Fine-tuned model not found at {FINETUNE_DIR}.")
+    print("Falling back to base model: microsoft/trocr-base-printed")
 
 print(f"Project root : {PROJECT_ROOT}")
-print(f"Fine-tuned   : {FINETUNE_DIR}")
 
 # ── Model loading ─────────────────────────────────────────────────────────────
 
@@ -58,7 +60,7 @@ def load_pipeline():
         device=device,
         tts_backend="cloud",
         model_cache_dir=str(MODEL_CACHE),
-        recognition_checkpoint=str(FINETUNE_DIR),
+        recognition_checkpoint=RECOGNITION_CHECKPOINT,
     )
     print("Pipeline ready ✓")
     return pipe
